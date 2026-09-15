@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#123b45">
+<title>旅遊筆記</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+  :root{
+    --ink:#123b45; --primary:#0f8b8d; --accent:#ef6f53; --gold:#e6a532;
+    --bg:#f2f6f7; --card:#ffffff; --line:#dde6ea; --muted:#5f7684; --sand:#fbf5ea;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0}
+  body{font-family:"PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.7; padding-bottom:64px;}
+  .wrap{max-width:680px;margin:0 auto;padding:0 16px}
+
+  .citybar{position:sticky;top:0;z-index:1000;background:var(--bg);
+    border-bottom:1px solid var(--line);padding:10px 0}
+  .cities{display:flex;gap:8px;overflow-x:auto;padding:0 16px;max-width:680px;
+    margin:0 auto;scrollbar-width:none}
+  .cities::-webkit-scrollbar{display:none}
+  .ctab{white-space:nowrap;border:1px solid var(--line);background:var(--card);
+    color:var(--ink);border-radius:999px;padding:7px 16px;font-size:14px;
+    font-weight:700;cursor:pointer}
+  .ctab.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .ctab.add{border-style:dashed;color:var(--accent);border-color:var(--accent)}
+
+  header{position:relative;color:#fff;padding:32px 0 26px;overflow:hidden}
+  header::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:22px;
+    background:var(--bg);
+    -webkit-mask:radial-gradient(14px at 14px 22px,transparent 98%,#000) repeat-x;
+    mask:radial-gradient(14px at 14px 22px,transparent 98%,#000) repeat-x;
+    -webkit-mask-size:28px 22px;mask-size:28px 22px}
+  .eyebrow{font-size:13px;letter-spacing:.3em;opacity:.85;margin:0 0 4px}
+  h1{margin:0;font-size:50px;font-weight:800;letter-spacing:.06em;line-height:1}
+  .sub{margin:8px 0 0;font-size:15px;letter-spacing:.1em;opacity:.92}
+  .highlight{margin-top:18px;background:rgba(255,255,255,.16);
+    border:1px solid rgba(255,255,255,.35);border-radius:12px;padding:11px 13px;
+    font-size:13.5px;display:flex;gap:9px;align-items:flex-start}
+  .highlight .dot{color:var(--gold);font-size:17px;line-height:1.3}
+  .hero-in input,.hero-in textarea{width:100%;border:none;border-radius:9px;
+    padding:8px 10px;font-family:inherit;margin-top:8px;
+    background:rgba(255,255,255,.9);color:var(--ink)}
+  .hero-in .h-title{font-size:30px;font-weight:800}
+  .themes{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+  .sw{width:30px;height:30px;border-radius:50%;border:2px solid rgba(255,255,255,.7);cursor:pointer}
+  .sw.on{outline:2px solid #fff;outline-offset:2px}
+  .del-city{margin-top:12px;border:1px solid rgba(255,255,255,.6);background:transparent;
+    color:#fff;border-radius:9px;padding:6px 12px;font-size:13px;font-weight:700;cursor:pointer}
+
+  .pills{display:flex;gap:8px;overflow-x:auto;padding:14px 16px 2px;
+    max-width:680px;margin:0 auto;scrollbar-width:none}
+  .pills::-webkit-scrollbar{display:none}
+  .pill{white-space:nowrap;border:1px solid var(--line);background:var(--card);
+    color:var(--ink);border-radius:999px;padding:6px 14px;font-size:13.5px;
+    font-weight:600;text-decoration:none}
+
+  #mapbox{height:300px;border-radius:14px;overflow:hidden;margin:16px 0 6px;
+    border:1px solid var(--line);z-index:1}
+  #mapnote{display:none;font-size:13px;color:var(--muted);background:var(--sand);
+    border:1px solid var(--line);border-radius:12px;padding:12px;margin:16px 0 6px;text-align:center}
+  .maphint{font-size:12px;color:var(--muted);margin:0 0 6px;text-align:right}
+  .numpin{background:var(--accent);color:#fff;border-radius:50%;width:26px;height:26px;
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;
+    border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+  .leaflet-popup-content{font-family:inherit;font-size:14px}
+  .leaflet-popup-content a{color:var(--primary);font-weight:700}
+  #maplegend{display:none;flex-wrap:wrap;gap:6px 14px;margin:0 0 10px;font-size:12.5px;color:var(--muted)}
+  .legend-chip{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+  .legend-chip i{width:11px;height:11px;border-radius:50%;display:inline-block;flex:none}
+
+  section{margin:22px 0}
+  .s-head{display:flex;align-items:baseline;gap:10px;margin:0 0 12px}
+  .s-tag{font-size:11px;font-weight:700;letter-spacing:.16em;color:#fff;
+    background:var(--primary);border-radius:5px;padding:3px 8px}
+  .s-tag.accent{background:var(--accent)}
+  .s-tag.gold{background:var(--gold)}
+  .s-tag.ink{background:var(--ink)}
+  .s-head h2{margin:0;font-size:21px;font-weight:800}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:14px 15px;margin-bottom:10px}
+  .card.hasdetail .read-only{cursor:pointer}
+  .card .name{font-weight:700;font-size:16.5px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .badge{font-size:11px;font-weight:700;color:var(--accent);
+    border:1px solid var(--accent);border-radius:6px;padding:1px 7px}
+  .caret{margin-left:auto;color:var(--muted);font-size:13px;transition:transform .2s}
+  .card .note{margin:5px 0 0;font-size:14px;color:var(--muted)}
+  .detail{display:none;margin-top:9px;padding-top:9px;border-top:1px dashed var(--line);
+    font-size:14px;color:var(--ink);line-height:1.75}
+  .card.open .detail{display:block}
+  .card.open .caret{transform:rotate(180deg)}
+
+  .fab{position:fixed;right:16px;bottom:16px;z-index:1200;background:var(--ink);
+    color:#fff;border:none;border-radius:999px;padding:12px 18px;font-size:15px;
+    font-weight:700;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.24)}
+  .fab.editing{background:var(--accent)}
+  .toolbar{display:none;gap:8px;flex-wrap:wrap;margin:14px 0 0}
+  body.edit .toolbar{display:flex}
+  .tbtn{border:1px solid var(--line);background:var(--card);border-radius:10px;
+    padding:8px 12px;font-size:13.5px;font-weight:600;cursor:pointer;color:var(--ink)}
+  .tbtn.warn{color:var(--accent);border-color:var(--accent)}
+  body.edit .card{border-style:dashed;border-color:var(--primary)}
+  .edit-only{display:none}
+  body.edit .edit-only{display:block}
+  body.edit .read-only{display:none}
+  input.f,textarea.f{width:100%;border:1px solid var(--line);border-radius:9px;
+    padding:8px 10px;font-size:14px;font-family:inherit;color:var(--ink);
+    background:var(--sand);margin-top:6px}
+  textarea.f{resize:vertical;min-height:44px}
+  .geo{display:flex;gap:8px}
+  .geo input{flex:1}
+  .mini{border:none;background:transparent;color:var(--accent);font-size:13px;
+    font-weight:700;cursor:pointer;padding:4px 0}
+  .add-item{width:100%;border:1px dashed var(--primary);background:var(--sand);
+    color:var(--primary);border-radius:10px;padding:9px;font-weight:700;cursor:pointer;font-size:14px}
+  .add-sec{width:100%;border:1px dashed var(--accent);background:#fff;color:var(--accent);
+    border-radius:12px;padding:12px;font-weight:700;cursor:pointer;font-size:15px;margin:8px 0 30px}
+  .sec-edit{display:none;gap:8px;align-items:center;margin-bottom:10px}
+  body.edit .sec-edit{display:flex}
+  .del-sec{border:none;background:transparent;color:var(--accent);font-size:20px;cursor:pointer}
+
+  footer{text-align:center;color:var(--muted);font-size:12.5px;margin:34px 0 10px;padding:0 16px}
+  .updated{font-size:12px;color:var(--muted);text-align:right;margin:8px 16px 0}
+</style>
+</head>
+<body>
+
+<div class="citybar"><div class="cities" id="cities"></div></div>
+<header><div class="wrap hero-in" id="hero"></div></header>
+<div class="pills" id="pills"></div>
+
+<div class="wrap">
+  <p class="updated" id="updated"></p>
+  <p class="maphint" id="maphint" style="display:none">路線總覽・可捏放縮放・點標記可 Google 導航</p>
+  <div id="mapbox" style="display:none"></div>
+  <div id="maplegend" style="display:none"></div>
+  <div id="mapnote">🗺️ 地圖需要連網才能顯示（清單與介紹離線可看）</div>
+  <div id="app"></div>
+  <button class="add-sec edit-only" onclick="addSection()">＋ 新增分類</button>
+  <div class="toolbar">
+    <button class="tbtn" onclick="save()">💾 儲存變更</button>
+    <button class="tbtn" onclick="document.getElementById('importer').click()">⬆ 匯入</button>
+    <button class="tbtn" onclick="exportJSON()">⬇ 匯出備份</button>
+    <button class="tbtn warn" onclick="resetAll()">↺ 還原預設</button>
+  </div>
+  <input type="file" id="importer" accept="application/json,.json" style="display:none">
+  <footer>切換上方城市看不同筆記・點卡片展開介紹・右下角 🔧 隨時修改<br>資料存在這台裝置・出發前請再查證票價與營業時間</footer>
+</div>
+
+<button class="fab" id="fab" onclick="toggleEdit()">🔧 編輯</button>
+
+<script>
+"use strict";
+var KEY="travel_hub_v1";
+var mem=null;
+function load(){try{var s=localStorage.getItem(KEY);return s?JSON.parse(s):null;}catch(e){return mem;}}
+function persist(o){try{localStorage.setItem(KEY,JSON.stringify(o));}catch(e){mem=o;}}
+
+var THEMES={
+  coast:{name:"海岸綠",ink:"#123b45",primary:"#0f8b8d",accent:"#ef6f53",gold:"#e6a532"},
+  sea:{name:"碧海藍",ink:"#17324a",primary:"#1f6f9c",accent:"#c9512f",gold:"#d99a2b"},
+  forest:{name:"山林綠",ink:"#1c3327",primary:"#2f7d4f",accent:"#d98324",gold:"#c9a227"},
+  sunset:{name:"暮色紫",ink:"#3a2438",primary:"#a8478a",accent:"#ef6f53",gold:"#e6a532"},
+  night:{name:"墨夜藍",ink:"#1a2740",primary:"#3a5a8c",accent:"#d16a4a",gold:"#d9a441"}
+};
+function hexRgba(h,a){var n=parseInt(h.slice(1),16);return"rgba("+((n>>16)&255)+","+((n>>8)&255)+","+(n&255)+","+a+")";}
+function applyTheme(id){
+  var t=THEMES[id]||THEMES.coast, r=document.documentElement.style;
+  r.setProperty("--ink",t.ink);r.setProperty("--primary",t.primary);
+  r.setProperty("--accent",t.accent);r.setProperty("--gold",t.gold);
+  document.querySelector("meta[name=theme-color]").setAttribute("content",t.primary);
+  document.querySelector("header").style.background=
+    "radial-gradient(120% 90% at 85% 8%,"+hexRgba(t.gold,.5)+", transparent 55%),"+
+    "linear-gradient(135deg,"+t.primary+" 0%,"+t.accent+" 135%)";
+}
+
+function tripCity(){return {eyebrow:"私人行程 ・ 2026/09/27–28",title:"私旅・台東",sub:"9/27–28 兩天一夜・自駕",theme:"sunset",
+   highlight:"9/27 07:00 大寮捷運站出發（自駕）→ 東隆堂枋山店買龜苓膏 → 大武休息 → 順利約 10:00 抵台東 ・ 住：路得行旅",
+   sections:[
+    {tag:"去程",color:"",title:"第一日・去程（9/27）",items:[
+      {name:"大寮捷運站 出發",badge:"07:00",note:"自駕，往南迴方向。",detail:"高雄捷運紅線終點站 R3，作為集合出發點，周邊有停車空間。從這裡走台1線轉台9線（南迴）往台東。",lat:22.5760,lng:120.3955,q:"大寮捷運站"},
+      {name:"東隆堂枋山店",badge:"休息",note:"中途休息、買龜苓膏。",detail:"位於台9線（屏鵝公路南下路段、近水底寮）的東隆堂枋山店，招牌龜苓膏，順路南下歇腳補給。",lat:22.2600,lng:120.6560,q:"東隆堂 枋山"},
+      {name:"大武休息（大武之心南迴驛）",badge:"",note:"你寫的「南迴之星」，正式名稱可能是「大武之心南迴驛」，請再確認。",detail:"台9線南段的休息站與地方農創館，可上廁所、補給、看海景，是南迴中繼點。過了這裡再開約1小時左右進台東市。",lat:22.3535,lng:120.8945,q:"大武之心南迴驛"},
+      {name:"抵達台東",badge:"約10:00",note:"路途順利的話。"}]},
+    {tag:"第一日",color:"gold",title:"第一日・台東（9/27）",items:[
+      {name:"正氣路 台電肉包",badge:"",note:"抵達先吃。",detail:"台東市老字號蒸肉包，皮軟餡實、銅板價，是在地人的早點。賣完為止，建議早點去。（營業時間出發前查證）",lat:22.7568,lng:121.1490,q:"台電蒸肉包 台東"},
+      {name:"中華路 米台目",badge:"中餐",note:"市區在地小吃。",detail:"台東市在地米苔目，湯的、乾的都有，配黑輪、油豆腐，銅板價填肚子剛好。",lat:22.7585,lng:121.1460,q:"米苔目 台東中華路"},
+      {name:"可可娜咖啡 Coconut",badge:"台11線",note:"卑南杉原、富山護漁區旁；台11海線上、接都蘭順路。",detail:"台11線杉原（卑南鄉杉原22號）的南洋風海景咖啡，椰林茅草屋、海景第一排。低消一杯飲料，約 10:00–18:00、週四公休（你去週六 OK）。停車位少，可停旁邊廟埕廣場。",lat:22.8490,lng:121.1960,q:"可可娜咖啡 台東"},
+      {name:"都蘭糖廠",badge:"",note:"台11線往北，文創聚落。",detail:"舊糖廠改建的文創聚落，有工作室、咖啡、選物小店與不定期市集、音樂表演，適合悠閒晃一圈、喝杯咖啡。",lat:22.8830,lng:121.2360,q:"都蘭糖廠"},
+      {name:"路得行旅",badge:"入住",note:"回市區辦理入住。",detail:"台東市區商旅，鄰近鐵花村、觀光夜市，走路覓食方便。房型與是否含早餐請以你的訂房為準。",lat:22.7560,lng:121.1450,q:"路得行旅 台東"},
+      {name:"海濱公園・黃家蔥油餅",badge:"",note:"吃蔥油餅、看海發呆。",detail:"台東海濱公園海景開闊、有自行車道，適合傍晚散步。黃家蔥油餅是在地人氣現煎點心（可加蛋），常要排隊。",lat:22.7600,lng:121.1520,q:"黃家蔥油餅 台東"},
+      {name:"台東四維路夜市（觀光夜市）",badge:"晚餐",note:"第一日晚上吃喝，取代原利嘉晚餐。",detail:"台東觀光夜市（四維路一帶），在地小吃、烤物、飲料多，離路得行旅近、走路或短程車就到，不用開山路。",lat:22.7530,lng:121.1470,q:"台東觀光夜市 四維路"},
+      {name:"返回 路得行旅",badge:"",note:"結束第一天。"}]},
+    {tag:"第二日",color:"accent",title:"第二日・台東＋回程（9/28）",items:[
+      {name:"明奎早餐店",badge:"早餐",note:"法式吐司；人太多再說（備案待定）。",detail:"台東市在地早餐，招牌法式吐司人氣高，假日常需候位。人太多就啟動備案改別家。",lat:22.7550,lng:121.1470,q:"明奎早餐店 台東"},
+      {name:"台東森林公園・琵琶湖",badge:"",note:"散步、騎車繞湖。",detail:"市區旁的「黑森林」，園內有琵琶湖等湖泊與環湖步道、自行車道，早晨散步或租單車繞一圈很舒服。",lat:22.7605,lng:121.1400,q:"台東森林公園 琵琶湖"},
+      {name:"啟程回高雄",badge:"",note:"走台9／南迴往南。"},
+      {name:"太麻里 華源海岸",badge:"回程①",note:"休息、拍椰林大道與海景。最靠近台東市，先到。",detail:"太麻里華源，南迴公路旁的看海點，有筆直椰林大道與「天空之鏡」水池倒影，是熱門拍照祕境。三站中最北，回程先到這。",lat:22.6670,lng:121.0060,q:"華源海灣 太麻里"},
+      {name:"太麻里福興宮（招財貓土地公）",badge:"回程②",note:"南里街32號，市區順路祈福。比多良先到。",detail:"百年土地公廟，廟旁有2米高招財貓與巨型紅燈籠，號稱全台最萌土地公，可求招財貓御守、買招財貓餅乾。位在太麻里市區（南里街32號），比多良先到。",lat:22.6190,lng:121.0080,q:"太麻里福興宮 招財貓土地公"},
+      {name:"多良車站",badge:"回程③",note:"多良村瀧溪路8-1號，最美海上車站。位置最南，最後到。",detail:"廢站後爆紅的「全台最美車站」，高架月台正對太平洋，可拍火車＋海景與「天使之翼」。現場需付清潔費、假日人多。三站中最南，回程最後到，之後續行南迴回高雄。",lat:22.5200,lng:120.9580,q:"多良車站"},
+      {name:"絲綢咖啡（大溪・看海咖啡）",badge:"回程④·備選",note:"台9線405.6公里處（大溪社區入口、測速相機旁），看海咖啡；只收現金、有室外雅座、提供素食。",detail:"位置比多良更南，回高雄路上最後一段順路歇腳。打烊約 18:00，評價 4.9。",lat:22.4980,lng:120.9520,q:"絲綢咖啡 太麻里 大溪"},
+      {name:"其他",badge:"彈性",note:"視狀況變更。"}]},
+    {tag:"備案",color:"ink",title:"備案・待確認・訂位",items:[
+      {name:"黑人早餐店（第二日早餐備案）",badge:"早餐備案",note:"豐榮路25-1號，5:30–11:00，內用／外帶；明奎人太多就改這家。",detail:"電話 089-330702。台東市在地早餐。",lat:22.7580,lng:121.1430,q:"黑人早餐店 台東 豐榮路"},
+      {name:"初早餐",badge:"早餐備選",note:"台東市早餐店；第二日早餐備選之一。",lat:22.7572,lng:121.1449,q:"初早餐 台東"},
+      {name:"egg 荷包蛋早餐店",badge:"早餐備選",note:"台東市早餐店；第二日早餐備選之一。",lat:22.7647,lng:121.1466,q:"egg荷包蛋早餐店 台東"},
+      {name:"歐巴螞食品（台東伴手禮）",badge:"伴手禮",note:"台東伴手禮品牌，新生路59號；回高雄前或離開台東順路買。",detail:"台東伴手禮領導品牌之一。",lat:22.7514,lng:121.1493,q:"歐巴螞食品 台東 新生路"},
+      {name:"亞豆湯包（台東卑南店）",badge:"路線備選",note:"9/27 走市區→卑南太平→接南迴這條路上的湯包備選（不在台11海線）。",detail:"卑南偏內側（22.782, 121.087），往台9南迴方向順路，可當離開台東前的一餐。",lat:22.7823,lng:121.0871,q:"亞豆湯包 台東卑南"},
+      {name:"越南小廚（太麻里午餐備案）",badge:"午餐備案",note:"太麻里泰和村外環路49號，越南菜、平價、只收現金；回程午餐備案。",detail:"約 11:00–15:00，午休後 17:00 再營業，評價 4.7。",lat:22.6100,lng:121.0030,q:"越南小廚 太麻里"},
+      {name:"淳真好食光（太麻里甜點備案）",badge:"甜點備案",note:"太麻里街472號，網美咖啡／點心，只收現金、有室外雅座；打烊約 19:00。",detail:"回程在太麻里想喝咖啡吃甜點的備案，評價 4.7。",lat:22.6120,lng:121.0070,q:"淳真好食光 太麻里"},
+      {name:"回程時間分配",badge:"",note:"華源／土地公／多良三站抓好時間，避免趕路。"}]},
+    {tag:"名產",color:"gold",title:"台東名產・伴手禮",items:[
+      {name:"封仔餅",badge:"傳統糕餅",note:"台東最經典的中式糕餅，用紅紙包成一條（一封）；內餡有綠豆沙、芋頭或肉餅。",detail:"推薦協興珍餅店、佳香味餅店。"},
+      {name:"寒單餅",badge:"傳統糕餅",note:"外型討喜，內餡包綠豆沙＋麻糬，口感豐富。"},
+      {name:"地瓜酥",badge:"人氣零食",note:"片片酥脆卻不油膩，看劇／開車小零嘴。",detail:"楊記家傳地瓜酥、連城記地瓜酥是排隊名店。"},
+      {name:"琪瑪酥",badge:"人氣零食",note:"酥軟、香氣濃郁，有原味、海苔等口味。",detail:"青澤的熱銷品項。"},
+      {name:"手工麻糬",badge:"保存期短",note:"東部米質優、軟Q；★保存期很短，接近回程再買、盡快吃完。",detail:"陳記麻糬、杉原陳家麻糬；陳記有限定的旗魚酥鹹口味麻糬。"}]}
+   ]};}
+
+function tripQingdao(){return {eyebrow:"探親之旅 ・ 2026/12/24–28",title:"私旅・青島",sub:"12/24–28 探親",theme:"night",
+   highlight:"青島探親 ・ 去 12/24 高雄07:35→香港→青島 ・ 回 12/28 青島14:30→香港→高雄21:50 ・ 全程國泰航空 CX（訂位 9TY4RK）・ 住：麥島地鐵站輕居飯店（4晚）",
+   sections:[
+    {tag:"航班",color:"ink",title:"航班・國泰 CX",items:[
+      {name:"高雄 → 香港",badge:"12/24 07:35",note:"CX449",detail:"去程第 1 段。旅客 CHANG YUAN MING｜訂位代號 9TY4RK｜電子機票 160-5286652550。"},
+      {name:"香港 → 青島",badge:"12/24 10:05",note:"CX954（抵青島）",detail:"去程第 2 段，香港轉機。訂位代號 9TY4RK｜電子機票 160-5286652550。"},
+      {name:"青島 → 香港",badge:"12/28 14:30",note:"CX951",detail:"回程第 1 段。訂位代號 9TY4RK｜電子機票 160-5286652550。"},
+      {name:"香港 → 高雄",badge:"12/28 21:50",note:"CX448（返高雄）",detail:"回程第 2 段。香港停留較久（青島 14:30 起飛、香港 21:50 才起飛），可在機場用餐休息。訂位代號 9TY4RK｜電子機票 160-5286652550。"}]},
+    {tag:"住宿",color:"gold",title:"住宿",items:[
+      {name:"青島五四廣場麥島地鐵站輕居飯店",badge:"4 晚",note:"12/24–12/28 入住 4 晚。",detail:"旅客 CHANG YUAN MING。位置：五四廣場／小麥島一帶、近麥島地鐵站，步行可搭地鐵，排周邊景點方便。房型與細節以飯店訂房確認為準。",lat:36.0560,lng:120.4020,q:"青島麥島地鐵站"}]},
+    {tag:"D1",color:"",title:"12/24（四）Day 1・抵達・平安夜（近飯店）",items:[
+      {name:"抵達青島",badge:"航班·午後",note:"香港 10:05 起飛，估 13:00–14:00 抵達；打車／地鐵到麥島飯店約 15:30。",detail:"★到飯店已下午，Day1 砍到剛好、輕鬆落地過平安夜。"},
+      {name:"太平角公園（八大關西側）",badge:"近飯店",note:"老洋房咖啡館喝熱紅酒／拿鐵，近飯店、天黑前散步看海。",detail:"在市南東、離麥島飯店近，抵達當天不折騰。",lat:36.0485,lng:120.3495,q:"太平角公園 青島"},
+      {name:"銀魚巷（聖誕限定）",badge:"平安夜",note:"近青島火車站的老巷，聖誕燈飾與微型市集，比大教堂少人；直接當平安夜晚餐＋逛市集。",detail:"12/24 平安夜來最應景；離飯店約 20–25 分車，晚上去剛好。",lat:36.0635,lng:120.3130,q:"銀魚巷 青島"}]},
+    {tag:"D2",color:"gold",title:"12/25（五）Day 2・老城一日（西→北順掃）",items:[
+      {name:"團島農貿市場",badge:"早午餐",note:"最西端先開吃：現炸脂渣＋羊肉湯／現蒸海鮮，最道地的冬日暖味。",detail:"可買海鮮請市場加工攤代料理（見必吃榜『團島劉芳』）。",lat:36.0575,lng:120.2985,q:"團島農貿市場 青島"},
+      {name:"中山路",badge:"老街",note:"百年商業街，德式老建築＋老字號，接棧橋、天主教堂一線。",detail:"老城核心（中山路／大鮑島／教堂／琴嶼路）彼此約 1.5 公里內，全程用走的、不用打車。",lat:36.0665,lng:120.3160,q:"中山路 青島市南"},
+      {name:"大鮑島歷史文化街區",badge:"老城",note:"修復後的里院街區，老青島風情、文創小店與餐飲，鄰劈柴院。",lat:36.0700,lng:120.3150,q:"大鮑島歷史文化街區 青島"},
+      {name:"太興里（里院聚落）",badge:"1914",note:"1914 年的百年里院，就在大鮑島街區內；修繕後成餐飲＋文創藝術聚落，逛＋吃順路。",detail:"你提供的『太興里』查到了：市南大鮑島最具代表性的里院之一，與大鮑島同一區，直接串在一起。",lat:36.0692,lng:120.3158,q:"太興里 青島大鮑島"},
+      {name:"江蘇路基督教堂",badge:"",note:"古堡教堂，冬日枯樹黃牆有北歐冷冽感。",lat:36.0668,lng:120.3222,q:"江蘇路基督教堂 青島"},
+      {name:"琴嶼路咖啡街",badge:"傍晚",note:"連小青島／魯迅公園的海濱小路，看落日、文青小店；棧橋就在旁邊。",lat:36.0580,lng:120.3225,q:"琴嶼路 小青島 青島"},
+      {name:"台東夜市（台東步行街）",badge:"夜",note:"青島最大商圈夜市（市北台東三路），非台灣台東；約 16:00–23:00。",detail:"回程往北順路；海鮮燒烤、鍋包肉、鮮肉餅、山東甜沫。",lat:36.0790,lng:120.3455,q:"台東步行街 青島"}]},
+    {tag:"D3",color:"accent",title:"12/26（六）Day 3・李滄深度（近家）",items:[
+      {name:"海泊河早市",badge:"早",note:"市北北／滄口邊的早市，清晨到中午前最熱鬧，先趕早市買現炸現蒸、吃早點。",detail:"本溪路6號（本溪路與鞍山路交叉口北 40 米），近海泊橋（海慈醫療）地鐵站 C1 口；座標 36.0962, 120.3596。離滄口近、順路接老滄口鍋貼。",lat:36.0962,lng:120.3596,q:"海泊河農貿市場 青島"},
+      {name:"老滄口鍋貼",badge:"午餐",note:"老字號三鮮鍋貼，外酥湯燙、暖身。",lat:36.1630,lng:120.3230,q:"老滄口鍋貼 青島"},
+      {name:"竹子庵公園",badge:"下午",note:"李滄山林遊客極少，竹林終年翠綠、山上道觀清幽。",detail:"在李滄東部山區、稍繞路，冬天冷；想輕鬆可跳過。",lat:36.1520,lng:120.4300,q:"竹子庵公園 青島"},
+      {name:"小叔家家聚",badge:"家聚",note:"白天在李滄，晚間小叔家家聚（暫定就這天，其他天不排）。"}]},
+    {tag:"D4",color:"",title:"12/27（日）Day 4・祈福＋室內避寒（近飯店）",items:[
+      {name:"湛山寺",badge:"上午·祈福",note:"青島市區主要佛寺（1934 年建、非千年），可祈福求平安，有藥師琉璃光塔。",detail:"在市南、近飯店；白天開門，安排上午先去祈福再接海洋世界。",lat:36.0555,lng:120.3625,q:"湛山寺 青島"},
+      {name:"青島極地海洋世界",badge:"上午–午",note:"東海東路、市南東近飯店；室內看白鯨／海豚／企鵝表演，冬天完全不怕冷。",detail:"卡表演場次（出發前查當日場次）；玩半天綽綽有餘。",lat:36.0575,lng:120.4090,q:"青島海昌極地海洋公園"},
+      {name:"一躺咖啡酒吧（Yi Tang Coffee & Pub）",badge:"下午",note:"貓咖網紅店，貓咪溫馴親人、氣氛悠閒，也是影劇取景地周邊。",detail:"近地鐵人民大會堂站（市南、離飯店不遠）；下午擼貓喝咖啡，晚上也有酒吧。",lat:36.0662,lng:120.3830,q:"一躺咖啡酒吧 青島"}]},
+    {tag:"D5",color:"gold",title:"12/28（一）Day 5・悠閒→返程",items:[
+      {name:"飯店附近早餐／咖啡",badge:"上午",note:"麥島／五四廣場周邊，悠閒吃早餐、喝杯咖啡，不排景點。",detail:"當天要趕飛機，行程留白最舒服、不慌。"},
+      {name:"前往膠東國際機場",badge:"中午",note:"提前出發，機場離市區約 1 小時＋車程，預留報到＋香港轉機。"},
+      {name:"返程航班",badge:"14:30 起飛",note:"CX951 青島 14:30→香港。",detail:"建議 11:00 前出發、12:00 前抵達機場。"}]},
+    {tag:"海鮮",color:"accent",title:"必吃・海鮮／名菜",items:[
+      {name:"辣炒蛤蜊＋青島原漿",badge:"經典組合",note:"海鮮配冰啤是青島日常。",detail:"冬天室內熱炒館也有；塑膠袋裝原漿生啤是特色。"},
+      {name:"刀魚（白帶魚）",badge:"冬季時令",note:"帶魚／白帶魚，冬天正是產季、油脂肥美，煎或燉都鮮。",detail:"你問冬天還有嗎——帶魚本就是冬季當令魚，這時候吃剛好。"},
+      {name:"流亭豬腳",badge:"名菜",note:"膠東名菜滷豬蹄，源自城陽流亭，皮Q膠質足、香而不膩。",detail:"青島餐館常見（船歌等也有「流亭豬蹄」），冬天吃暖身下飯。"},
+      {name:"團島劉芳海鮮加工",badge:"海鮮加工",note:"在團島農貿市場買海鮮，交給劉芳這類加工攤代客料理（清蒸／辣炒），最鮮最划算。",detail:"對應 Day2 團島市場，買＋加工一次搞定。"},
+      {name:"開海海鮮餐廳",badge:"聚餐",note:"青島知名海鮮連鎖，主打紅島海鮮與時令海貨，適合聚餐。"},
+      {name:"木滋嗒味（八道菜）",badge:"創新家常",note:"巷弄／居民樓內的現點現做家常菜，有鍋氣、非預製，回頭客多。",detail:"逍遙三路5號，11:00–14:00／17:00–21:00，電話 13026512456。招牌偏麻辣：香辣蟹（常用大閘蟹）、麻辣掌中寶、重慶鴨舌；你不吃辣可點土豆絲、秋葵炒肉。"},
+      {name:"波螺油子（青島本幫菜）",badge:"青島菜",note:"市南區漳州二路50號；主打老青島本幫菜。",detail:"在市南、離飯店一帶不遠，想吃道地青島家常菜可來。",lat:36.0670,lng:120.3830,q:"波螺油子 青島本幫菜 漳州二路"}]},
+    {tag:"麵點",color:"gold",title:"必吃・水餃／麵點",items:[
+      {name:"船歌魚水餃",badge:"招牌",note:"青島魚水餃第一品牌（2009 創立、多家分店）。",detail:"必點鮁魚（綠皮）、墨魚（黑皮）、黃花魚三色水餃，另有三鮮蠣蝦水餃、辣滷鮑魚、蔥香炸大蝦仁、酸辣墨魚蛋湯。點餐像熱炒走到食材看板旁點。閩江路店評價高。"},
+      {name:"鮁魚水餃",badge:"在地必吃",note:"青島招牌，鮁魚＋韭菜＋五花肉，入口清鮮。",detail:"膠東沿海四季盛產鮁魚，當地提親傳統要帶成對鮁魚；船歌或在地小館都有。"},
+      {name:"雙合園（海鮮水餃青島菜）",badge:"老店",note:"青島老字號餃子館，多家分店、除夕也開。",detail:"必點全家福四色水餃（黃花魚／蝦仁／墨魚／鮁魚）、海鮮疙瘩湯；水餃個大餡多，另有炸大排、風味茄條。上清路店等評價高。"},
+      {name:"海鮮麵疙瘩",badge:"暖胃",note:"膠東家常，海鮮＋麵疙瘩煮成熱湯，冬天暖身。",detail:"蛤蜊、蝦等海鮮煮麵疙瘩，鹹鮮暖胃，找在地小館或家常菜館（雙合園也有海鮮疙瘩湯）。"},
+      {name:"三鮮鍋貼",badge:"小吃",note:"山東青島十大小吃，外皮金黃酥脆、湯汁燙口。",detail:"豬肉餡配時蔬，Day3 老滄口鍋貼正好對應。"},
+      {name:"陳師父高密爐包",badge:"小吃",note:"高密風味爐包（底煎脆的水煎包），餡足、底酥。"},
+      {name:"海平餛飩（皮蛋餛飩・逍遙二路店）",badge:"飯店附近",note:"熱門餛飩店，招牌皮蛋餛飩，湯鮮料實；逍遙二路店在飯店附近。"},
+      {name:"海燕奶奶·海鮮鍋貼（八大關店）",badge:"鍋貼",note:"香港西路48號海天 MALL 中心 LG 層；海鮮鍋貼＋特色小吃。",detail:"在市南、香港西路一帶，離飯店近；逛街順便吃。",lat:36.0575,lng:120.3760,q:"海燕奶奶海鮮鍋貼 海天MALL 青島"}]},
+    {tag:"小吃",color:"",title:"必吃・小吃／甜點",items:[
+      {name:"脂渣",badge:"冬日感",note:"5 斤豬肉煉 1 斤，嚼勁像牛肉乾。",detail:"現炸熱脂渣配羊肉湯，市場（如團島農貿市場）最道地。"},
+      {name:"味為先 豆腐腦",badge:"早點",note:"在地豆腐腦（鹹豆花），早餐暖胃。"},
+      {name:"糖球（冰糖葫蘆）",badge:"冬天限定",note:"北方冬天山楂糖葫蘆，糖稀凍硬、又酸又甜又冰。",detail:"冬季街頭常見，很應景。"},
+      {name:"蜜三刀",badge:"小點心",note:"山東傳統糕點，炸後裹糖漿、甜香酥軟，配茶剛好。"},
+      {name:"如意香辣雞架",badge:"名小吃·偏辣",note:"老字號甜辣雞架，肉厚醬濃、拌玉米飯；平價人氣蒼蠅館子。",detail:"你不吃辣要斟酌——招牌是甜辣口。總店市南郓城南路6號，另有新湛一支路15號、豐縣路、廣州路、麥島店等分店（麥島店離你飯店近）。",lat:36.0620,lng:120.3230,q:"如意香辣雞架 郓城南路 青島"}]},
+    {tag:"宵夜",color:"ink",title:"必吃・宵夜",items:[
+      {name:"偉偉野餛飩",badge:"夜宵",note:"你指定的偉偉——在地有名的野餛飩攤，不只餛飩，更是燒烤配扎啤。",detail:"青島人心中的宵夜之神，建議坐戶外。冬天冷，選有暖爐或室內座；地址／時間到當地或問小叔最準。"},
+      {name:"登州支路 胡同炸串",badge:"20年老店",note:"登州路啤酒街一帶的胡同炸串，20 年老店，炸串配啤酒。",detail:"登州路是青島啤酒街、啤酒博物館旁，宵夜氛圍。"},
+      {name:"牛貳油炸社（牛二炸串）",badge:"李滄·1998",note:"李滄人氣老式炸串，1998 創立，傳統裹麵酥脆＋獨門醬料。",detail:"李滄區永安路52-5號，近老滄口／李村商圈；對應 Day3 李滄，宵夜或午後小吃都行。",lat:36.1580,lng:120.3250,q:"牛貳油炸社 永安路 青島"}]},
+    {tag:"咖啡",color:"",title:"咖啡・特色（近飯店）",items:[
+      {name:"Vanillacafe 香草咖啡（銀海大世界店）",badge:"近飯店",note:"飯店附近的咖啡廳，銀海大世界一帶（你說的 V 開頭那間，沒被移除）。",detail:"適合當 Day5 早上『飯店附近咖啡』的落點，或平日想喝杯咖啡就近去。"},
+      {name:"領地咖啡",badge:"李村",note:"李滄區李村商圈青山路（266103）；在李村，跟 Day3 李滄／小叔家、興山路早市、李村夜市同一片。",detail:"排 Day3 或親戚聚餐日在李村時順路喝。",lat:36.1470,lng:120.4330,q:"領地咖啡 李村 青島"},
+      {name:"Coffee Buff",badge:"市北",note:"市北區都昌路3號；離台東步行街一帶不遠。",detail:"排 Day2 傍晚台東夜市前後可順道。",lat:36.0830,lng:120.3560,q:"Coffee Buff 都昌路 青島"},
+      {name:"李想珈（大學路品牌首店）",badge:"市南老城",note:"大學路14-1號，人民會堂地鐵站 B 口步行 270m；在老城文青咖啡街大學路。",detail:"跟 Day2 江蘇路教堂、大學路名人故居一帶超近，逛老城時順路。",lat:36.0660,lng:120.3270,q:"李想珈 大學路 青島"}]},
+    {tag:"市集",color:"gold",title:"市集・早市・夜市（待排入）",items:[
+      {name:"興山路早市",badge:"待排",note:"李滄／李村一帶的早市；跟李村夜市綁一起，等你定親戚聚餐（在李村）的日子再落地。",detail:"確切點出發前用地圖再確認。"},
+      {name:"李村夜市",badge:"待排",note:"李滄向陽路＋樂客城（少山路88號，書院路／京口路口），燒烤配啤酒、小吃多，約到 23:00。",detail:"跟興山路早市同在李村，配親戚聚餐日；若排 Day3 會跟小叔家聚同晚，二選一。"},
+      {name:"彰化路早點店",badge:"早點",note:"彰化路（青島市北、台灣路名區，近台東步行街）的早點店。",detail:"店名待補，或到當地現找。"},
+      {name:"青島理工大學門口夜市",badge:"夜市",note:"大學門口的學生夜市，平價小吃、炸串、烤冷麵一類。",detail:"學生商圈價格實惠、氣氛熱鬧；確切校區與擺攤時間到當地確認。"}]},
+    {tag:"伴手禮",color:"accent",title:"伴手禮・零食（必買）",items:[
+      {name:"高粱飴",badge:"必買",note:"青島／山東名產軟糖，Q軟微甜。",detail:"老牌零食，超市、特產店都有，好帶又好分。"},
+      {name:"鈣奶餅乾",badge:"必買",note:"青食鈣奶餅乾——青島人的童年味，奶香酥脆。",detail:"最經典的青島伴手禮零食之一。"},
+      {name:"山東大煎餅",badge:"必買",note:"超薄超脆、入口即化的煎餅。",detail:"雜糧薄脆、好帶；當地超市或特產店有包裝款。"},
+      {name:"魷魚條／魷魚乾",badge:"必買",note:"海濱城市的海味零食，鹹香耐嚼。",detail:"當地市場、特產店常見。"},
+      {name:"青島喜餅（棋子）",badge:"必買",note:"菱形的小喜餅，家裡稱它「棋子」。",detail:"膠東喜餅／棋子餅，硬式小餅、耐放。品牌或老店名補給我可再加。"}]},
+    {tag:"送禮酒",color:"ink",title:"名酒・送禮（青島買）",items:[
+      {name:"即墨老酒 十年陳釀（國韻／金標・黃酒）",badge:"養生首選",note:"10 年陳釀黃酒，醇厚溫和、微甜不膩，11.5 度不上頭；冬溫夏冰皆宜。送注重養生／少喝烈酒／女性長輩最合適。",detail:"復古青花或暗紅釉瓷瓶禮盒，有文化底蘊。約 ¥150–220／盒。"},
+      {name:"52 度 琅琊台 青雲琅（白酒）",badge:"有面子",note:"預算內經典款，海派柔和、綿甜甘冽、窖香優雅，隔天較不頭痛。送 40–60 歲男性親友有面子。",detail:"深藍＋燙金禮盒，商務高檔感。約 ¥180–260／瓶。"},
+      {name:"38 度 琅琊台 中華貢（白酒）",badge:"低度綿柔",note:"低度白酒明星款，38 度綿柔細膩、不辣喉；適合怕辣、喝酒節制的長輩家聚慢酌。",detail:"正紅或深咖禮盒，沉穩大方。約 ¥160–230／瓶。"},
+      {name:"怎麼挑",badge:"指南",note:"愛喝白酒→青雲琅（要排場）或中華貢（怕辣／節制）；養生・女性長輩・少喝烈酒→即墨老酒十年。"},
+      {name:"哪裡買（近飯店）",badge:"購買點",note:"麥凱樂 B1 超市『山東特產／名酒專區』：即墨老酒 5／10／20 年禮盒＋琅琊台，¥150–280、保正品。備選：永旺東部店（原佳世客，逢年過節貨源最穩）、盒馬鮮生（萬象城店）、香港中路利群煙酒（急用現貨）。",detail:"認明包裝防偽碼、索取發票，優先大型連鎖。都在香港中路一帶、離飯店近。"}]},
+    {tag:"台灣伴手禮",color:"gold",title:"台灣伴手禮・待購（回禮嶗山茶・NT$500 內）",items:[
+      {name:"天仁茗茶 單罐散茶（金萱／凍頂 150g）",badge:"對等回茶",note:"對方送茶、你回茶最對等；大陸長輩認得天仁。約 NT$250–380。",detail:"直營門市直接說「500 內單罐散茶」，指定金萱／凍頂／特級綠茶；別買網路千元大禮盒。要個綠色手提袋。"},
+      {name:"老楊方塊酥 樂遊台灣禮盒",badge:"分量足",note:"手提沉、不甜不膩，純烘烤麥香，長輩接受度高。約 NT$380。",detail:"嘉義老牌、非油炸；官方直營或量販買，避開機場／車站加價店。"},
+      {name:"裕珍馨 奶油小酥餅禮盒（3／6 入）",badge:"喜慶漢餅",note:"台中大甲百年老字號，減糖不黏牙、紅金包裝大氣。約 NT$240–430。",detail:"直營店或百貨專櫃刷全台連線系統。"},
+      {name:"野生烏魚子禮盒（8–10 片）",badge:"有面子",note:"大陸稀有、自帶高級感，撕開即食，配酒配茶都行。約 NT$450–500。",detail:"台北迪化街老店（黃長生／李日勝）；高雄可到三鳳中街找有店面、能開發票的行號。"},
+      {name:"哪裡買（高雄・大寮就近）",badge:"購買點",note:"全聯（大寮區內就有）先看；要一站買齊往鳳山跑——大全聯鳳山店（原大潤發）或萬家福（原家樂福）；天仁單罐散茶到天仁茗茶鳳山門市；烏魚子到三鳳中街年貨街。",detail:"更正：大寮沒有家樂福；大潤發已於 2025/8 併入全聯改名『大全聯』、家樂福量販 2026/7 改名『萬家福』。正常連鎖都明碼標價，按價買即可。"}]},
+    {tag:"提醒",color:"ink",title:"探親・注意事項",items:[
+      {name:"證件",badge:"必備",note:"台胞證等證件出發前確認。"},
+      {name:"禦寒裝備",badge:"重要",note:"長版防風羽絨、發熱衣、防滑靴；毛帽、厚圍巾、手套、口罩。海邊沒戴手套帽子會迅速凍僵。",detail:"12/24–28 平均約 -1°C～6°C，海風強。"},
+      {name:"小叔家家聚",badge:"暫定",note:"暫定 Day3（在李滄／李村那天）晚間家聚，非每天；日期再與小叔確認。"},
+      {name:"行程性質",badge:"參考",note:"每日行程為 AI 建議草案，景點與聖誕市集時間出發前再確認。"}]}
+   ]};}
+
+function seed(){return{active:0,updated:"2026-08-18",cities:[
+  {eyebrow:"TAITUNG ・ 台灣東海岸",title:"台東",sub:"太平洋・稻浪・慢活",theme:"coast",
+   highlight:"2026 台灣國際熱氣球嘉年華 ・ 7/4–8/20 鹿野高台 ・ 每週二公休 ・ 晨場 05:30–07:00／午場 17:00–18:30",
+   sections:[
+    {tag:"海線",color:"",title:"海線景點",items:[
+      {name:"小野柳（富岡地質公園）",badge:"",note:"奇岩海蝕地形，天氣好可遠眺綠島。"},
+      {name:"加路蘭海岸",badge:"查證",note:"裝置藝術＋海景；2026 因工程可能暫停，出發前查一下。"},
+      {name:"三仙台",badge:"日出",note:"八拱跨海步橋，看日出的經典點。"},
+      {name:"都歷海灘",badge:"",note:"退潮時的「天空之鏡」倒影超好拍。"},
+      {name:"水往上流",badge:"",note:"視覺錯位奇景，路過順遊。"},
+      {name:"多良車站",badge:"必拍",note:"全台最靠海車站，火車與太平洋同框。"}]},
+    {tag:"山線",color:"gold",title:"山線・縱谷",items:[
+      {name:"伯朗大道／金城武樹（池上）",badge:"",note:"筆直稻浪大道，清晨或傍晚最舒服，可租單車。"},
+      {name:"鹿野高台",badge:"熱氣球",note:"嘉年華主場，也玩飛行傘。"},
+      {name:"初鹿牧場",badge:"親子",note:"餵動物、滑草、喝現擠鮮奶。"},
+      {name:"知本國家森林遊樂區",badge:"",note:"森林步道與泡腳池，07:30–17:00。"},
+      {name:"原生應用植物園",badge:"",note:"被羊群包圍，門票含藥草火鍋吃到飽。"}]},
+    {tag:"市區",color:"ink",title:"台東市區",items:[
+      {name:"海濱公園／森林公園",badge:"",note:"騎車看海，市區最好放空的地方。"},
+      {name:"鐵花村・鐵道藝術村",badge:"夜晚",note:"音樂聚落與慢市集，晚上很有氣氛。"},
+      {name:"台東美術館",badge:"",note:"全台首座自然主題美術館，週一休。"},
+      {name:"正氣路夜市／觀光夜市",badge:"",note:"在地小吃集散地。"}]},
+    {tag:"美食",color:"accent",title:"必吃美食",items:[
+      {name:"池上便當",badge:"經典",note:"木盒稻香飯，池上必吃。"},
+      {name:"東河包子",badge:"",note:"環島客必買路邊名物。"},
+      {name:"榕樹下米苔目・寶桑豆花",badge:"老味道",note:"在地人從小吃到大的市區小吃。"},
+      {name:"藍蜻蜓／阿鋐炸雞",badge:"雙雄",note:"台東鹽酥雞兩大門派。"},
+      {name:"富岡漁港海鮮",badge:"",note:"現撈旗魚、鬼頭刀，鮮度取勝。"}]},
+    {tag:"提醒",color:"",title:"交通・提醒",items:[
+      {name:"怎麼到台東",badge:"",note:"台鐵普悠瑪／自強，台北約 3.5 小時；或飛台東機場。"},
+      {name:"市區到景點",badge:"",note:"距離遠、班次少，建議租車或包車。"},
+      {name:"行程安排",badge:"",note:"山線、海線分天走，一天一線較不趕。"},
+      {name:"熱氣球",badge:"",note:"晨場人多提早到；光雕日期看官網。"}]}
+   ]},
+  {eyebrow:"QINGDAO ・ 中國山東",title:"青島",sub:"紅瓦・綠樹・碧海・啤酒",theme:"sea",
+   highlight:"青島國際啤酒節 ・ 每年約 7 月中–8 月中（2026 第36屆為 7/17–8/15）・ 主場金沙灘啤酒城，另有嶗山、老城會場 ・ 多數場地免費",
+   sections:[
+    {tag:"老城",color:"",title:"老城・地標",items:[
+      {name:"棧橋",badge:"地標",note:"百年海上長橋與回瀾閣，青島招牌。"},
+      {name:"八大關",badge:"必逛",note:"萬國建築博覽，花石樓、公主樓；地鐵3號線匯泉廣場站。"},
+      {name:"聖彌額爾天主教堂",badge:"",note:"中山路旁德式雙塔，內部門票約 ￥10。"},
+      {name:"中山路步行街",badge:"",note:"老城主街，逛街配街頭小吃。"},
+      {name:"信號山公園",badge:"",note:"旋轉觀景台俯瞰整片紅瓦老城。"},
+      {name:"小魚山公園",badge:"日落",note:"360° 看棧橋老城，傍晚最美；地鐵3號線大學路站。"}]},
+    {tag:"海濱",color:"gold",title:"海濱・自然",items:[
+      {name:"第二海水浴場",badge:"",note:"老城最有名的沙灘。"},
+      {name:"小麥島公園",badge:"打卡",note:"人稱「青島小墾丁」，海景日落、野餐超好拍。"},
+      {name:"五四廣場・奧帆中心",badge:"",note:"新城地標「五月的風」與帆船基地。"},
+      {name:"嶗山",badge:"一整天",note:"海岸線唯一破千米的山、道教聖地，要留一天。"}]},
+    {tag:"啤酒",color:"accent",title:"啤酒・文化",items:[
+      {name:"青島啤酒博物館",badge:"試飲",note:"1903 德建酒廠原址，參觀含試飲。"},
+      {name:"啤酒節三大會場",badge:"季節",note:"金沙灘（西海岸）／嶗山／老城，7 月中–8 月中。"},
+      {name:"原漿啤酒",badge:"必試",note:"塑膠袋裝生啤是青島日常。"}]},
+    {tag:"美食",color:"accent",title:"必吃美食",items:[
+      {name:"海鮮（蛤蜊・扇貝・大蝦）",badge:"",note:"清蒸或炭烤原味，配冰啤。"},
+      {name:"鍋貼",badge:"名小吃",note:"皮脆多汁，青島經典。"},
+      {name:"王姐燒烤（中山路）",badge:"",note:"街頭燒烤，魷魚、里脊必點。"},
+      {name:"排骨米飯",badge:"在地",note:"青島人的家常經典味。"},
+      {name:"嶗山可樂",badge:"嚐鮮",note:"帶草藥味的在地汽水。"}]},
+    {tag:"提醒",color:"",title:"交通・提醒",items:[
+      {name:"台灣往返",badge:"",note:"直飛約 2 小時，入境需備台胞證。"},
+      {name:"市區交通",badge:"",note:"地鐵 3 號線串起老城主要景點。"},
+      {name:"行動支付",badge:"",note:"先綁好支付寶／微信支付，現金幾乎用不到。"},
+      {name:"天氣",badge:"",note:"夏季避暑舒適，但海邊風大，防曬防風都帶。"}]}
+   ]},
+  tripCity(),
+  tripQingdao()
+]};}
+
+var data=seed();
+if(data.active>=data.cities.length)data.active=0;
+var editing=false;
+function city(){return data.cities[data.active];}
+
+function el(t,c,h){var e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e;}
+function esc(s){return(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+
+function renderCities(){
+  var box=document.getElementById("cities");box.innerHTML="";
+  data.cities.forEach(function(c,i){
+    var b=el("button","ctab"+(i===data.active?" on":""),esc(c.title||"未命名"));
+    b.onclick=function(){switchCity(i);};box.appendChild(b);
+  });
+  if(editing){var add=el("button","ctab add","＋ 城市");add.onclick=addCity;box.appendChild(add);}
+}
+
+function renderHero(){
+  var h=document.getElementById("hero");h.innerHTML="";var c=city();
+  if(!editing){
+    h.appendChild(el("p","eyebrow",esc(c.eyebrow||"")));
+    h.appendChild(el("h1",null,esc(c.title||"")));
+    h.appendChild(el("p","sub",esc(c.sub||"")));
+    var hl=el("div","highlight");hl.appendChild(el("span","dot","◆"));
+    hl.appendChild(el("span",null,esc(c.highlight||"")));h.appendChild(hl);
+  }else{
+    var ie=el("input");ie.placeholder="小標";ie.value=c.eyebrow||"";ie.oninput=function(){c.eyebrow=this.value;};
+    var it=el("input","h-title");it.placeholder="城市名";it.value=c.title||"";it.oninput=function(){c.title=this.value;renderCities();};
+    var is=el("input");is.placeholder="副標";is.value=c.sub||"";is.oninput=function(){c.sub=this.value;};
+    var ih=el("textarea");ih.placeholder="本季亮點";ih.rows=3;ih.value=c.highlight||"";ih.oninput=function(){c.highlight=this.value;};
+    h.appendChild(ie);h.appendChild(it);h.appendChild(is);h.appendChild(ih);
+    var th=el("div","themes");
+    Object.keys(THEMES).forEach(function(k){
+      var sw=el("button","sw"+(c.theme===k?" on":""));sw.title=THEMES[k].name;
+      sw.style.background=THEMES[k].primary;
+      sw.onclick=function(){c.theme=k;applyTheme(k);renderHero();};th.appendChild(sw);
+    });
+    h.appendChild(th);
+    if(data.cities.length>1){var dc=el("button","del-city","🗑 刪除此城市");dc.onclick=delCity;h.appendChild(dc);}
+  }
+}
+
+function renderPills(){
+  var p=document.getElementById("pills");p.innerHTML="";
+  city().sections.forEach(function(sec,si){
+    var a=el("a","pill",esc(sec.title));a.href="#sec"+si;p.appendChild(a);
+  });
+}
+
+function renderApp(){
+  var app=document.getElementById("app");app.innerHTML="";var c=city();
+  c.sections.forEach(function(sec,si){
+    var s=el("section");s.id="sec"+si;
+    var se=el("div","sec-edit");
+    var st=el("input","f");st.value=sec.title;st.style.marginTop="0";st.oninput=function(){sec.title=this.value;renderPills();};
+    var ds=el("button","del-sec","🗑");ds.onclick=function(){if(confirm("刪除整個分類？")){c.sections.splice(si,1);renderApp();renderPills();}};
+    se.appendChild(st);se.appendChild(ds);s.appendChild(se);
+
+    var hw=el("div","read-only");var head=el("div","s-head");
+    head.appendChild(el("span","s-tag "+(sec.color||""),esc(sec.tag||"")));
+    head.appendChild(el("h2",null,esc(sec.title)));hw.appendChild(head);s.appendChild(hw);
+
+    sec.items.forEach(function(it,ii){
+      var card=el("div","card"+(it.detail?" hasdetail":""));
+      var ro=el("div","read-only");
+      var nm=el("div","name",esc(it.name));
+      if(it.badge)nm.appendChild(el("span","badge",esc(it.badge)));
+      if(it.detail)nm.appendChild(el("span","caret","▾"));
+      ro.appendChild(nm);
+      if(it.note)ro.appendChild(el("p","note",esc(it.note)));
+      if(it.detail){
+        ro.appendChild(el("div","detail",esc(it.detail)));
+        ro.onclick=function(){card.classList.toggle("open");};
+      }
+      card.appendChild(ro);
+      var eo=el("div","edit-only");
+      var fn=el("input","f");fn.placeholder="名稱";fn.value=it.name||"";fn.oninput=function(){it.name=this.value;};
+      var fb=el("input","f");fb.placeholder="標籤（可留白）";fb.value=it.badge||"";fb.oninput=function(){it.badge=this.value;};
+      var ft=el("textarea","f");ft.placeholder="一句話說明";ft.value=it.note||"";ft.oninput=function(){it.note=this.value;};
+      var fdd=el("textarea","f");fdd.placeholder="詳細介紹（點擊展開的內容，可留白）";fdd.value=it.detail||"";fdd.oninput=function(){it.detail=this.value;};
+      var geo=el("div","geo");
+      var fla=el("input","f");fla.placeholder="緯度 lat（可留白）";fla.value=(it.lat!=null?it.lat:"");fla.oninput=function(){it.lat=this.value===""?undefined:parseFloat(this.value);};
+      var flo=el("input","f");flo.placeholder="經度 lng";flo.value=(it.lng!=null?it.lng:"");flo.oninput=function(){it.lng=this.value===""?undefined:parseFloat(this.value);};
+      geo.appendChild(fla);geo.appendChild(flo);
+      eo.appendChild(fn);eo.appendChild(fb);eo.appendChild(ft);eo.appendChild(fdd);eo.appendChild(geo);
+      var del=el("button","mini","－ 刪除這項");del.onclick=function(){sec.items.splice(ii,1);renderApp();};
+      eo.appendChild(del);card.appendChild(eo);s.appendChild(card);
+    });
+    var add=el("button","add-item edit-only","＋ 新增一項");
+    add.onclick=function(){sec.items.push({name:"",badge:"",note:""});renderApp();};s.appendChild(add);
+    app.appendChild(s);
+  });
+  renderMap();
+}
+
+var DAYCOLORS=["#1f6f9c","#ef6f53","#2f7d4f","#a8478a","#d99a2b","#3a5a8c","#c9512f","#0f8b8d","#7a5cc0"];
+var mapObj=null;
+function renderMap(){
+  var box=document.getElementById("mapbox"),note=document.getElementById("mapnote"),hint=document.getElementById("maphint"),legend=document.getElementById("maplegend");
+  if(mapObj){mapObj.remove();mapObj=null;}
+  var hide=function(){box.style.display="none";note.style.display="none";hint.style.display="none";if(legend)legend.style.display="none";};
+  if(editing){hide();return;}
+  var groups=[];
+  city().sections.forEach(function(sec){
+    var pts=sec.items.filter(function(it){return typeof it.lat==="number"&&typeof it.lng==="number"&&!isNaN(it.lat)&&!isNaN(it.lng);});
+    if(pts.length)groups.push({title:sec.title,pts:pts});
+  });
+  if(!groups.length){hide();return;}
+  if(!window.L){box.style.display="none";hint.style.display="none";if(legend)legend.style.display="none";note.style.display="block";return;}
+  note.style.display="none";box.style.display="block";hint.style.display="block";
+  mapObj=L.map(box,{scrollWheelZoom:false});
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:18,attribution:"© OpenStreetMap"}).addTo(mapObj);
+  var all=[];
+  if(legend){legend.innerHTML="";legend.style.display="flex";}
+  groups.forEach(function(g,gi){
+    var color=DAYCOLORS[gi%DAYCOLORS.length];
+    var lls=[];
+    g.pts.forEach(function(it,i){
+      var ll=[it.lat,it.lng];lls.push(ll);all.push(ll);
+      var icon=L.divIcon({className:"",html:'<div class="numpin" style="background:'+color+'">'+(i+1)+'</div>',iconSize:[26,26],iconAnchor:[13,13]});
+      var query=encodeURIComponent(it.q||it.name);
+      L.marker(ll,{icon:icon}).addTo(mapObj).bindPopup(
+        '<b>'+esc(g.title)+' ・ '+(i+1)+'. '+esc(it.name)+'</b><br><a href="https://www.google.com/maps/search/?api=1&query='+query+'" target="_blank" rel="noopener">Google 導航 ↗</a>');
+    });
+    if(lls.length>1)L.polyline(lls,{color:color,weight:3,opacity:.75}).addTo(mapObj);
+    if(legend){var chip=el("span","legend-chip");chip.innerHTML='<i style="background:'+color+'"></i>'+esc(g.title);legend.appendChild(chip);}
+  });
+  if(all.length>1)mapObj.fitBounds(all,{padding:[34,34]});else mapObj.setView(all[0],13);
+  setTimeout(function(){mapObj&&mapObj.invalidateSize();},120);
+}
+
+function renderAll(){
+  applyTheme(city().theme);renderCities();renderHero();renderPills();renderApp();
+  document.getElementById("updated").textContent=data.updated?("更新 "+data.updated):"";
+}
+
+function switchCity(i){data.active=i;if(editing){editing=false;document.body.classList.remove("edit");resetFab();}renderAll();window.scrollTo(0,0);}
+function resetFab(){var f=document.getElementById("fab");f.textContent="🔧 編輯";f.classList.remove("editing");}
+function toggleEdit(){
+  editing=!editing;document.body.classList.toggle("edit",editing);
+  var f=document.getElementById("fab");f.textContent=editing?"✓ 完成":"🔧 編輯";f.classList.toggle("editing",editing);
+  if(!editing)save(true);
+  renderCities();renderHero();renderApp();
+}
+function addCity(){
+  data.cities.push({eyebrow:"",title:"新城市",sub:"",theme:"forest",highlight:"",
+    sections:[{tag:"分類",color:"",title:"新分類",items:[{name:"",badge:"",note:""}]}]});
+  data.active=data.cities.length-1;renderAll();window.scrollTo(0,0);
+}
+function delCity(){
+  if(data.cities.length<=1)return;
+  if(confirm("刪除「"+city().title+"」整個城市？")){data.cities.splice(data.active,1);data.active=0;renderAll();}
+}
+function addSection(){
+  city().sections.push({tag:"新分類",color:"",title:"新分類",items:[{name:"",badge:"",note:""}]});
+  renderApp();renderPills();
+}
+function save(silent){data.updated=new Date().toISOString().slice(0,10);persist(data);
+  document.getElementById("updated").textContent="更新 "+data.updated;if(!silent)alert("已儲存到這台裝置 ✓");}
+function exportJSON(){var b=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+  var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="travel-backup.json";a.click();}
+function resetAll(){if(confirm("還原成預設內容？你目前的修改會消失。")){data=seed();persist(data);editing=false;
+  document.body.classList.remove("edit");resetFab();renderAll();}}
+
+document.getElementById("importer").onchange=function(ev){
+  var f=ev.target.files[0];if(!f)return;var r=new FileReader();
+  r.onload=function(){
+    try{
+      var obj=JSON.parse(r.result);
+      var incoming=obj.cities?obj.cities:(obj.sections?[obj]:null);
+      if(!incoming){alert("檔案格式不符");return;}
+      incoming.forEach(function(c){
+        var idx=-1;for(var i=0;i<data.cities.length;i++){if(data.cities[i].title===c.title){idx=i;break;}}
+        if(idx>=0)data.cities[idx]=c;else data.cities.push(c);
+      });
+      data.active=data.cities.length-1;persist(data);renderAll();window.scrollTo(0,0);
+      alert("已匯入 ✓");
+    }catch(e){alert("讀取失敗："+e.message);}
+    ev.target.value="";
+  };
+  r.readAsText(f);
+};
+
+renderAll();
+</script>
+</body>
+</html>
