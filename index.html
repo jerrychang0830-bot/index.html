@@ -423,7 +423,8 @@ function seed(){return{active:0,updated:"2026-10-19",cities:[
   tripCity(),
   tripQingdao(),
   tripCoast(),
-  macauCity()
+  macauCity(),
+  malaysiaCity()
 ]};}
 
 function macauCity(){return {eyebrow:"MACAU ・ 中國澳門特別行政區",title:"澳門",sub:"葡式風情・世界遺產・美食・不夜城",theme:"night",
@@ -460,6 +461,35 @@ function macauCity(){return {eyebrow:"MACAU ・ 中國澳門特別行政區",tit
       {name:"澳門通",badge:"",note:"130 MOP（含卡費30、最少加值100）；搭巴士約半價（3 MOP）、輕軌也有折扣。",detail:"超市、便利商店、澳門通客服中心可買；也能在便利商店、超市與部分餐廳付款。"},
       {name:"輕軌（氹仔線）",badge:"",note:"票價 6／8／10／12 MOP，依站數；班距約 7.5–10 分鐘。",detail:"平日 06:30–23:15，假日 06:30–23:59（旅遊網站資料）。媽閣站通車時間與站數各來源說法不一，出發前看輕軌官網。"},
       {name:"計程車",badge:"",note:"首 1600 公尺 21 MOP，之後每 220 公尺 2 MOP。本島到氹仔單程約 65–85 MOP。",detail:"多半只收現金；要刷卡可叫 Uber。特定情況有附加費，以官方收費表為準。"}]}
+   ]};}
+
+function malaysiaCity(){return {eyebrow:"MALAYSIA ・ 東南亞",title:"馬來西亞",sub:"多元文化・美食天堂・熱帶",theme:"forest",
+   highlight:"貨幣：令吉 MYR（RM） ・ 台灣護照免簽最長 30 天 ・ 抵達前 3 天內填 MDAC ・ 與台灣無時差 ・ 美食優先版（城市以吉隆坡為主，之後再調整）",
+   sections:[
+    {tag:"必吃",color:"accent",title:"必吃美食・吉隆坡",items:[
+      {name:"亦是好肉骨茶",badge:"肉骨茶",note:"吉隆坡經典肉骨茶，湯頭藥材香；週一休。",detail:"20, Jalan Landak, Pudu, 55100 Kuala Lumpur。10:00–22:00（食記資料）。",q:"亦是好肉骨茶 Jalan Landak Pudu"},
+      {name:"直落玻璃（瓦煲）肉骨茶",badge:"巴生",note:"巴生的瓦煲肉骨茶，要離開吉隆坡市區去吃。",detail:"Kaw 16, 32, Jalan Batai Laut 5, Taman Intan, 41300 Klang, Selangor。07:00–15:30，無休（食記資料）。",q:"Jalan Batai Laut 5 Taman Intan Klang 肉骨茶"},
+      {name:"雞容海南雞飯",badge:"海南雞",note:"茨廠街內的海南雞飯，午餐時段；週三休。",detail:"42, Jalan Sultan, City Centre, 50000 Kuala Lumpur。10:00–15:00。",q:"雞容海南雞飯 Jalan Sultan"},
+      {name:"滑雞咖哩麵",badge:"咖哩麵",note:"叻沙／咖哩麵類；週一休。",detail:"42, Jalan 1, Taman Len Seng, 56000 Kuala Lumpur。07:30–17:00。",q:"滑雞咖哩麵 Taman Len Seng"},
+      {name:"Nasi Lemak Bumbung",badge:"椰漿飯",note:"馬來西亞國飯 Nasi Lemak；離吉隆坡市區較遠。",detail:"6, Jalan 21/11b, Sea Park, 46300 Petaling Jaya。營業時間食記有兩組（10:00–15:00、16:00–00:00），出發前查證。",q:"Nasi Lemak Bumbung Sea Park"},
+      {name:"NZ Curry House（印度煎餅）",badge:"Roti",note:"24小時營業，可拍到雙子星塔。",detail:"Lot 42, Jln Ampang, Kampung Baru, 50450 Kuala Lumpur。路邊攤價位，沒有具體價格資料。",q:"NZ Curry House KLCC Jalan Ampang"},
+      {name:"何九海南茶店",badge:"咖椰吐司",note:"咖椰吐司、傳統早餐；常要排隊，週一休。",detail:"1, Jalan Balai Polis, City Centre, 50000 Kuala Lumpur。07:30–14:30（週末到 15:00）。排隊可能超過半小時。",q:"何九海南茶店 Jalan Balai Polis"},
+      {name:"初記炭炒福建面",badge:"福建麵",note:"晚上才開的炭炒福建麵；週二休。",detail:"同善路巷子內，Google 搜尋「12FLY HOTEL」找附近。19:30–00:00。",q:"初記炭炒福建面 吉隆坡"},
+      {name:"亞羅街夜市・沙爹",badge:"夜市",note:"夜市小攤吃沙爹；另有路邊攤 Ramly burger 當宵夜。",detail:"沙爹攤位、Ramly burger 攤位沒有查到確切地點與時間；店家等你之後補。"}]},
+    {tag:"須知",color:"gold",title:"飲食須知",items:[
+      {name:"清真與非清真",badge:"",note:"肉骨茶、海南雞飯等華人餐廳多含豬肉；馬來餐廳與印度穆斯林餐廳是清真，不賣豬肉。",detail:"跟穆斯林友人同行要先確認餐廳是否清真。"},
+      {name:"扁擔飯",badge:"小心價格",note:"食記提醒：有些店不明碼標價，點之前先確認價格。",detail:"沒有推薦特定店家。"},
+      {name:"價位與稅",badge:"",note:"吉隆坡一份主食約台幣70元（食記資料），對台灣旅客偏平價。",detail:"外交部資料提到銷售與服務稅 SST 自 2024年3月1日由 6% 調為 8%；餐廳帳單可能另加稅與服務費。"}]},
+    {tag:"景點",color:"",title:"城市重點（先列名稱，之後再調整）",items:[
+      {name:"吉隆坡",badge:"首都",note:"雙子星塔（KLCC）、茨廠街、亞羅街夜市、黑風洞。",detail:"景點開放時間與門票我還沒查，等你決定行程再補。"},
+      {name:"馬六甲",badge:"",note:"歷史古城。",detail:"尚未決定是否前往，之後再補。"},
+      {name:"檳城（喬治市）",badge:"",note:"街頭小吃出名。",detail:"尚未決定是否前往，之後再補。"}]},
+    {tag:"提醒",color:"ink",title:"入境・交通・安全",items:[
+      {name:"入境",badge:"查證",note:"台灣護照免簽最長 30 天、不可延期；護照效期文章寫需 6 個月以上。",detail:"旅遊網站資料，非官方公告；出發前到外交部領事事務局與馬方官網確認最新規定。"},
+      {name:"MDAC 數位入境卡",badge:"必填",note:"抵達前 3 天內上網填寫（抵達當天也算），免費。",detail:"收到的 email 只是確認信，還要回官網下載 PDF。台灣自2024年起可用自動通關，首次入境通常要先到人工櫃檯登記指紋；使用自動通關仍需先填 MDAC。文章提醒可能被要求出示財力證明（約每日100美元），通常不常抽查。"},
+      {name:"貨幣・電壓",badge:"",note:"令吉 MYR。電壓 220–240V，與台灣無時差。",detail:"插座型式外交部頁面沒寫；一般為英式三孔，出發前確認並準備轉接頭。匯率我沒查。"},
+      {name:"治安",badge:"",note:"吉隆坡及雪蘭莪、馬六甲、柔佛、檳城等地以偷竊為主，其次搶劫。注意跨國網路交友詐騙。",detail:"外交部建議出國前買旅遊保險（外籍人士就醫費用較高）。"},
+      {name:"緊急聯絡",badge:"",note:"警察／救護：市話 999、手機 112；消防 994。",detail:"駐馬來西亞台北經濟文化辦事處急難救助：境外 +60-19-381-2616；外交部旅外國人急難救助專線 0800-085-095。"}]}
    ]};}
 
 var data=seed();
