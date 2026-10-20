@@ -334,7 +334,7 @@ function tripCoast(){return {eyebrow:"海線一日遊 ・ 台17 海岸線",title
       {name:"海岸咖啡時段",badge:"重要",note:"海岸咖啡是傍晚才開，別白天跑去；排在回程夜間收尾。"},
       {name:"現金與停車",badge:"",note:"漁港、海產攤、海岸咖啡多收現金，帶足現金；泡麵土地公、漁港皆有停車。"}]}
    ]};}
-function seed(){return{active:0,updated:"2026-10-19",cities:[
+function seed(){return{active:0,updated:"2026-10-20",cities:[
   {eyebrow:"TAITUNG ・ 台灣東海岸",title:"台東",sub:"太平洋・稻浪・慢活",theme:"coast",
    highlight:"2026 台灣國際熱氣球嘉年華 ・ 7/4–8/20 鹿野高台 ・ 每週二公休 ・ 晨場 05:30–07:00／午場 17:00–18:30",
    sections:[
@@ -424,7 +424,8 @@ function seed(){return{active:0,updated:"2026-10-19",cities:[
   tripQingdao(),
   tripCoast(),
   macauCity(),
-  malaysiaCity()
+  malaysiaCity(),
+  koreaCity()
 ]};}
 
 function macauCity(){return {eyebrow:"MACAU ・ 中國澳門特別行政區",title:"澳門",sub:"葡式風情・世界遺產・美食・不夜城",theme:"night",
@@ -525,6 +526,36 @@ function malaysiaCity(){return {eyebrow:"MALAYSIA ・ 東南亞",title:"馬來�
       {name:"貨幣・電壓",badge:"",note:"令吉 MYR。電壓 220–240V，與台灣無時差。",detail:"插座型式外交部頁面沒寫；一般為英式三孔，出發前確認並準備轉接頭。匯率我沒查。"},
       {name:"治安",badge:"",note:"吉隆坡及雪蘭莪、馬六甲、柔佛、檳城等地以偷竊為主，其次搶劫。注意跨國網路交友詐騙。",detail:"外交部建議出國前買旅遊保險（外籍人士就醫費用較高）。"},
       {name:"緊急聯絡",badge:"",note:"警察／救護：市話 999、手機 112；消防 994。",detail:"駐馬來西亞台北經濟文化辦事處急難救助：境外 +60-19-381-2616；外交部旅外國人急難救助專線 0800-085-095。"}]}
+   ]};}
+
+function koreaCity(){return {eyebrow:"KOREA ・ 南韓",title:"韓國",sub:"首爾六區＋水原・韓屋・街區・美食",theme:"sunset",
+   highlight:"北村・益善洞／明洞／聖水洞／弘大／東大門／水原 ・ 以下資料為你提供，尚未查證營業時間與價格",
+   sections:[
+    {tag:"韓屋",color:"",title:"韓屋：北村、益善洞",items:[
+      {name:"北村韓屋村",badge:"景點",note:"現在還有人住。開放參觀時間上午 10 點到下午 5 點，走路要保持安靜。"},
+      {name:"益善洞",badge:"景點",note:"老韓屋改成咖啡廳、甜點店和餐廳，比北村熱鬧，更好逛。"},
+      {name:"Damsot",badge:"美食",note:"石鍋飯，有鮑魚、茄子、鯖魚口味；店很小要排隊。"},
+      {name:"Onjisim",badge:"美食",note:"在韓屋裡賣貝果早午餐，熱門時段可能要等 40 分鐘左右。"}]},
+    {tag:"明洞",color:"gold",title:"明洞",items:[
+      {name:"明洞聖堂",badge:"景點",note:"熱鬧商圈裡的一座哥德式教堂，晚上點燈很漂亮。"},
+      {name:"明洞夜市",badge:"夜市",note:"傍晚 5 點後攤販陸續擺出來。價格比其他地方稍高，很多攤位只收現金，記得帶。"},
+      {name:"明洞餃子",badge:"美食",note:"刀削麵和餃子。要先點餐付款才入座，排隊但翻桌很快，招牌泡菜的蒜味很重。"}]},
+    {tag:"聖水洞",color:"accent",title:"聖水洞",items:[
+      {name:"聖水洞咖啡街",badge:"景點",note:"咖啡廳、甜點店和品牌快閃店都集中在這裡，週末要排比較久。"},
+      {name:"Ggupdang",badge:"美食",note:"烤豬肉，店員會幫忙烤。只能現場登記候位，平日下午 3 點才開，建議先拿號碼再去逛街。"},
+      {name:"5TO7",badge:"美食",note:"舒芙蕾鬆餅，在首爾林旁邊，現點現做，要等 20 到 30 分鐘。"}]},
+    {tag:"弘大",color:"ink",title:"弘大",items:[
+      {name:"弘大街頭",badge:"景點",note:"很多街頭表演和 K-pop 舞蹈，晚上最熱鬧。"},
+      {name:"京義線林道",badge:"景點",note:"舊鐵道改成的綠色步道，適合散步。"},
+      {name:"Doma",badge:"美食",note:"韓牛燒肉，有生拌牛肉和 LA 牛小排，店員會幫你烤。"},
+      {name:"弘大部隊鍋",badge:"省錢",note:"想省錢可以去，24 小時營業，一個人也能點，泡麵和白飯免費續。"}]},
+    {tag:"東大門",color:"gold",title:"東大門",items:[
+      {name:"DDP 東大門設計廣場",badge:"景點",note:"建築師札哈・哈蒂設計的建築，可以免費進去逛，特定日子晚上有燈光秀。"},
+      {name:"廣藏市場",badge:"美食",note:"必吃綠豆煎餅、生拌牛肉、麻藥飯捲。人很多也很吵，就是要吃那個氣氛。"}]},
+    {tag:"水原",color:"",title:"水原",items:[
+      {name:"水原華城",badge:"世界遺產",note:"世界文化遺產，可以免費沿著城牆走一圈，大約一個半小時。"},
+      {name:"華城行宮",badge:"景點",note:"朝鮮國王出巡時住的行宮，開放到下午 6 點，附近可以租韓服拍照。"},
+      {name:"Yeonpo 排骨",badge:"美食",note:"水原最有名的是排骨。就在城牆旁邊，小菜很多，價格偏高，店員不太會說英文。"}]}
    ]};}
 
 var data=seed();
